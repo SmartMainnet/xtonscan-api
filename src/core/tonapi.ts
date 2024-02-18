@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import axios from 'axios'
 
 const { TONAPI_URL, TONAPI_KEY } = process.env

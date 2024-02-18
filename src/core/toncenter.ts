@@ -1,4 +1,3 @@
-import 'dotenv/config'
 import axios from 'axios'
 
 const { TONCENTER_URL, TONCENTER_KEY } = process.env

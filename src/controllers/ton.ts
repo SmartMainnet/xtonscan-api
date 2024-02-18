@@ -150,16 +150,12 @@ export const getWalletInfo = async (
     )
     const transactions = transactionsRes.data
 
-    if (!tonPrice || !jettons || !nfts || !transactions) {
-      return res.json(API.result({}))
-    }
-
     const walletAddress: string = Address.normalize(address)
     const balanceTON: number = addressData.balance / 1000000000 || 0
     const balanceUSD: number = balanceTON * tonPrice
-    const jettonCount: number = jettons.result?.length
-    const nftCount: number = nfts.result?.length
-    const transactionCount: number = transactions.result?.events?.length
+    const jettonCount: number = jettons.length
+    const nftCount: number = nfts.length
+    const transactionCount: number = transactions.events?.length
 
     return res.json(
       API.result({
@@ -173,7 +169,7 @@ export const getWalletInfo = async (
         },
         jetton_count: jettonCount,
         nft_count: nftCount,
-        transactionCount: transactionCount === 100 ? '> 100' : transactionCount,
+        transaction_count: transactionCount === 100 ? '> 100' : transactionCount,
         is_wallet: addressData.is_wallet,
       })
     )
