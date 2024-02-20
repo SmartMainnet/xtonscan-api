@@ -89,6 +89,15 @@ export const getAddressType = async (
       )
     }
 
+    if (addressData.interfaces.some((item: string) => item === 'jetton_master')) {
+      return res.json(
+        API.result({
+          address: normalizedAddress,
+          type: 'jetton',
+        })
+      )
+    }
+
     if (addressData.interfaces.some((item: string) => item === 'nft_item')) {
       return res.json(
         API.result({
@@ -169,8 +178,52 @@ export const getWalletInfo = async (
         },
         jetton_count: jettonCount,
         nft_count: nftCount,
-        transaction_count: transactionCount === 100 ? '> 100' : transactionCount,
+        transaction_count: transactionCount,
         is_wallet: addressData.is_wallet,
+      })
+    )
+  } catch (e: any) {
+    const error: string = e?.response?.data?.error
+
+    if (error) {
+      if (error.includes('rate limit')) {
+        return res.json(
+          API.error({
+            message: 'rate limit',
+          })
+        )
+      }
+    }
+
+    return res.json(API.error({}))
+  }
+}
+
+export const getJettonInfo = async (
+  req: Request,
+  res: Response
+): Promise<Response<IAPI>> => {
+  try {
+    const { address } = req.body
+
+    const response = await tonapi.get(`/jettons/${address}`)
+    const jettonInfo = response.data
+
+    const rawJettonAddress: string = jettonInfo.metadata.address
+    const jettonAddress: string = Address.normalize(rawJettonAddress)
+
+    return res.json(
+      API.result({
+        address: jettonAddress,
+        raw_address: rawJettonAddress,
+        mintable: jettonInfo.mintable,
+        total_supply: jettonInfo.total_supply,
+        holders_count: jettonInfo.holders_count,
+        name: jettonInfo.metadata.name,
+        symbol: jettonInfo.metadata.symbol,
+        decimals: jettonInfo.metadata.decimals,
+        description: jettonInfo.metadata.description,
+        verification: jettonInfo.verification,
       })
     )
   } catch (e: any) {
@@ -280,17 +333,21 @@ export const getNftInfoByOwner = async (
   }
 }
 
-export const getNfts = async (
+export const getTransactions = async (
   req: Request,
   res: Response
 ): Promise<Response<IAPI>> => {
   try {
-    const { address } = req.body
+    const { address, limit = 100, lt = 0 } = req.body
 
-    const response = await tonapi.get(`/accounts/${address}/nfts`)
-    const nfts = response.data.nft_items
+    const response = await tonapi.get(
+      `/accounts/${address}/events?limit=${limit}&initiator=false${
+        lt ? `&before_lt=${lt}` : ''
+      }`
+    )
+    const transactions = response.data
 
-    return res.json(API.result(nfts))
+    return res.json(API.result(transactions))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
@@ -336,21 +393,17 @@ export const getJettons = async (
   }
 }
 
-export const getTransactions = async (
+export const getNfts = async (
   req: Request,
   res: Response
 ): Promise<Response<IAPI>> => {
   try {
-    const { address, limit = 100, lt = 0 } = req.body
+    const { address } = req.body
 
-    const response = await tonapi.get(
-      `/accounts/${address}/events?limit=${limit}&initiator=false${
-        lt ? `&before_lt=${lt}` : ''
-      }`
-    )
-    const transactions = response.data
+    const response = await tonapi.get(`/accounts/${address}/nfts`)
+    const nfts = response.data.nft_items
 
-    return res.json(API.result(transactions))
+    return res.json(API.result(nfts))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
