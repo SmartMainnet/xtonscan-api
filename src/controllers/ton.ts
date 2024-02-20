@@ -5,6 +5,19 @@ import { tonapi, toncenter } from '../core/index.js'
 import { API } from '../classes/index.js'
 import { IAPI } from '../types/index.js'
 
+export const getFriendlyAddress = async (
+  req: Request,
+  res: Response
+): Promise<Response<IAPI>> => {
+  try {
+    const { address } = req.body
+
+    return res.json(API.result(Address.normalize(address)))
+  } catch (e: any) {
+    return res.json(API.error({}))
+  }
+}
+
 export const getRawAddress = async (
   req: Request,
   res: Response

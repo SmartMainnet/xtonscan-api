@@ -4,6 +4,7 @@ import { ton } from '../controllers/index.js'
 
 const router = Router()
 
+router.get('/ton/getFriendlyAddress', ton.getFriendlyAddress)
 router.get('/ton/getRawAddress', ton.getRawAddress)
 router.get('/ton/getTonPrice', ton.getTonPrice)
 router.get('/ton/getAddressType', ton.getAddressType)
