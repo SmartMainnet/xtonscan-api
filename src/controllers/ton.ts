@@ -212,6 +212,34 @@ export const getWalletInfo = async (
   }
 }
 
+export const getTransactionInfo = async (
+  req: Request,
+  res: Response
+): Promise<Response<IAPI>> => {
+  try {
+    const { address } = req.body
+
+    const response = await tonapi.get(`/events/${address}`)
+    const transaction = response.data
+
+    return res.json(API.result(transaction))
+  } catch (e: any) {
+    const error: string = e?.response?.data?.error
+
+    if (error) {
+      if (error.includes('rate limit')) {
+        return res.json(
+          API.error({
+            message: 'rate limit',
+          })
+        )
+      }
+    }
+
+    return res.json(API.error({}))
+  }
+}
+
 export const getJettonInfo = async (
   req: Request,
   res: Response
