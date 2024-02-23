@@ -167,17 +167,11 @@ export const getWalletInfo = async (
     const nftsRes = await tonapi.get(`/accounts/${address}/nfts`)
     const nfts = nftsRes.data.nft_items
 
-    const transactionsRes = await tonapi.get(
-      `/accounts/${address}/events?limit=${100}&initiator=false`
-    )
-    const transactions = transactionsRes.data
-
     const walletAddress: string = Address.normalize(address)
     const balanceTON: number = addressData.balance / 1000000000 || 0
     const balanceUSD: number = balanceTON * tonPrice
     const jettonCount: number = jettons.length
     const nftCount: number = nfts.length
-    const transactionCount: number = transactions.events?.length
 
     return res.json(
       API.result({
@@ -191,7 +185,6 @@ export const getWalletInfo = async (
         },
         jetton_count: jettonCount,
         nft_count: nftCount,
-        transaction_count: transactionCount,
         is_wallet: addressData.is_wallet,
       })
     )
