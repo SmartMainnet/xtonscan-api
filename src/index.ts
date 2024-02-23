@@ -1,9 +1,12 @@
 import 'dotenv/config'
 import express, { Express } from 'express'
 
+import { connectMongoose } from './database/connect/index.js'
 import { router } from './routes/index.js'
 
 const { PORT } = process.env
+
+await connectMongoose()
 
 const app: Express = express()
 

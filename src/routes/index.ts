@@ -1,8 +1,13 @@
 import { Router } from 'express'
 
-import { ton } from '../controllers/index.js'
+import { ton, users } from '../controllers/index.js'
 
 const router = Router()
+
+router.post('/users/createUser', users.createUser)
+router.get('/users/getUsers', users.getUsers)
+router.get('/users/getUserById', users.getUserById)
+router.get('/users/getUserByUserId', users.getUserByUserId)
 
 router.get('/ton/getFriendlyAddress', ton.getFriendlyAddress)
 router.get('/ton/getRawAddress', ton.getRawAddress)
