@@ -1,6 +1,7 @@
 import { Request, Response } from 'express'
 import { Address } from 'ton-core'
 
+import { TransactionsModel } from '../database/models/index.js'
 import { tonapi, toncenter } from '../core/index.js'
 import { API } from '../classes/index.js'
 import { IAPI } from '../types/index.js'
@@ -14,7 +15,7 @@ export const getFriendlyAddress = async (
 
     return res.json(API.result(Address.normalize(address)))
   } catch (e: any) {
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -32,21 +33,19 @@ export const getRawAddress = async (
       return res.json(API.result(rawAddress))
     }
 
-    return res.json(API.result({}))
+    return res.json(API.error({ message: 'error' }))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -62,21 +61,19 @@ export const getTonPrice = async (
       return res.json(API.result(tonPrice))
     }
 
-    return res.json(API.result({}))
+    return res.json(API.error({ message: 'error' }))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -120,29 +117,27 @@ export const getAddressType = async (
       )
     }
 
-    return res.json(API.result({}))
+    return res.json(API.error({ message: 'error' }))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes("can't decode address")) {
-        return res.json(
-          API.error({
-            message: "can't decode address",
-          })
-        )
-      }
-
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes("can't decode address")) {
+      return res.json(
+        API.error({
+          message: "can't decode address",
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
+    }
+
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -191,17 +186,15 @@ export const getWalletInfo = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -219,17 +212,15 @@ export const getTransactionInfo = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -263,17 +254,15 @@ export const getJettonInfo = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -307,17 +296,15 @@ export const getNftInfo = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -353,17 +340,15 @@ export const getNftInfoByOwner = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -372,16 +357,60 @@ export const getTransactions = async (
   res: Response
 ): Promise<Response<IAPI>> => {
   try {
-    const { address, limit = 100, lt = 0 } = req.body
+    const { address, message_id, limit = 10, page = 0 } = req.body
 
-    const response = await tonapi.get(
-      `/accounts/${address}/events?limit=${limit}&initiator=false${
-        lt ? `&before_lt=${lt}` : ''
-      }`
+    let transactionsFromDb = await TransactionsModel.findOne({ message_id })
+    const length = transactionsFromDb?.events.length || 0
+    const start = page * limit
+    const end = page * limit + limit
+
+    if (!transactionsFromDb) {
+      const response = await tonapi.get(
+        `/accounts/${address}/events?limit=100&initiator=false`
+      )
+
+      const transactions = response.data
+      transactionsFromDb = await TransactionsModel.create({
+        message_id,
+        events: transactions.events,
+        next_from: transactions.next_from,
+        is_end: transactions.events.length < limit,
+      })
+    } else if (start >= length) {
+      const response = await tonapi.get(
+        `/accounts/${address}/events?limit=100&initiator=false&before_lt=${transactionsFromDb.next_from}`
+      )
+
+      const transactions = response.data
+      await TransactionsModel.findOneAndUpdate(
+        { message_id },
+        {
+          $push: { events: { $each: transactions.events } },
+          $set: {
+            next_from: transactions.next_from,
+            is_end: transactions.events.length < limit,
+          },
+        }
+      )
+      const updatedTransactions = await TransactionsModel.findOne({ message_id })
+
+      if (updatedTransactions) {
+        transactionsFromDb = updatedTransactions
+      }
+    }
+
+    return res.json(
+      API.result({
+        owner_address: address,
+        limit,
+        page,
+        is_last_page:
+          page === Math.ceil(transactionsFromDb.events.length / limit) - 1 &&
+          transactionsFromDb.is_end,
+        events_count: transactionsFromDb.events.length,
+        events: transactionsFromDb.events.slice(start, end),
+      })
     )
-    const transactions = response.data
-
-    return res.json(API.result(transactions))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
@@ -395,7 +424,7 @@ export const getTransactions = async (
       }
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -413,17 +442,15 @@ export const getJettons = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
 
@@ -441,16 +468,14 @@ export const getNfts = async (
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
-    return res.json(API.error({}))
+    return res.json(API.error({ message: 'error' }))
   }
 }
