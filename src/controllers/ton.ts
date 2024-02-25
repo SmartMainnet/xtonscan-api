@@ -1,9 +1,7 @@
 import { Request, Response } from 'express'
-import { Address } from 'ton-core'
 
-import { TransactionsModel } from '../database/models/index.js'
-import { tonapi, toncenter } from '../core/index.js'
-import { API } from '../classes/index.js'
+import { tonapi } from '../core/index.js'
+import { API, Address } from '../classes/index.js'
 import { IAPI } from '../types/index.js'
 
 export const getFriendlyAddress = async (
@@ -13,7 +11,7 @@ export const getFriendlyAddress = async (
   try {
     const { address } = req.body
 
-    return res.json(API.result(Address.normalize(address)))
+    return res.json(API.result(Address.getNonBounceable(address)))
   } catch (e: any) {
     return res.json(API.error({ message: 'error' }))
   }
@@ -26,14 +24,7 @@ export const getRawAddress = async (
   try {
     const { address } = req.body
 
-    const response = await toncenter.get(`/unpackAddress?address=${address}`)
-    const rawAddress: string = response.data.result
-
-    if (rawAddress) {
-      return res.json(API.result(rawAddress))
-    }
-
-    return res.json(API.error({ message: 'error' }))
+    return res.json(API.result(Address.getRaw(address)))
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
@@ -87,7 +78,7 @@ export const getAddressType = async (
     const response = await tonapi.get(`/accounts/${address}`)
     const addressData = response.data
 
-    const normalizedAddress: string = Address.normalize(address)
+    const normalizedAddress: string = Address.getNonBounceable(address)
     const isWallet: boolean = addressData.is_wallet
 
     if (isWallet) {
@@ -162,7 +153,7 @@ export const getWalletInfo = async (
     const nftsRes = await tonapi.get(`/accounts/${address}/nfts`)
     const nfts = nftsRes.data.nft_items
 
-    const walletAddress: string = Address.normalize(address)
+    const walletAddress: string = Address.getNonBounceable(address)
     const balanceTON: number = addressData.balance / 1000000000 || 0
     const balanceUSD: number = balanceTON * tonPrice
     const jettonCount: number = jettons.length
@@ -235,7 +226,7 @@ export const getJettonInfo = async (
     const jettonInfo = response.data
 
     const rawJettonAddress: string = jettonInfo.metadata.address
-    const jettonAddress: string = Address.normalize(rawJettonAddress)
+    const jettonAddress: string = Address.getNonBounceable(rawJettonAddress)
 
     return res.json(
       API.result({
@@ -276,9 +267,11 @@ export const getNftInfo = async (
     const response = await tonapi.get(`/nfts/${address}`)
     const nftInfo = response.data
 
-    const ownerAddress: string = Address.normalize(nftInfo.owner.address)
-    const collectionAddress: string = Address.normalize(nftInfo.collection.address)
-    const nftAddress: string = Address.normalize(address)
+    const ownerAddress: string = Address.getNonBounceable(nftInfo.owner.address)
+    const collectionAddress: string = Address.getNonBounceable(
+      nftInfo.collection.address
+    )
+    const nftAddress: string = Address.getNonBounceable(address)
 
     return res.json(
       API.result({
@@ -319,9 +312,11 @@ export const getNftInfoByOwner = async (
     const nftInfo = response.data.nft_items[page]
 
     const nftCount: number = response.data.nft_items?.length
-    const ownerAddress: string = Address.normalize(nftInfo.owner.address)
-    const collectionAddress: string = Address.normalize(nftInfo.collection.address)
-    const nftAddress: string = Address.normalize(address)
+    const ownerAddress: string = Address.getNonBounceable(nftInfo.owner.address)
+    const collectionAddress: string = Address.getNonBounceable(
+      nftInfo.collection.address
+    )
+    const nftAddress: string = Address.getNonBounceable(address)
 
     return res.json(
       API.result({
@@ -357,71 +352,51 @@ export const getTransactions = async (
   res: Response
 ): Promise<Response<IAPI>> => {
   try {
-    const { address, message_id, limit = 10, page = 0 } = req.body
+    const { address, limit = 10, page = 0 } = req.body
 
-    let transactionsFromDb = await TransactionsModel.findOne({ message_id })
-    const length = transactionsFromDb?.events.length || 0
     const start = page * limit
-    const end = page * limit + limit
+    let eventsRes
 
-    if (!transactionsFromDb) {
-      const response = await tonapi.get(
-        `/accounts/${address}/events?limit=100&initiator=false`
+    if (start >= 1000) {
+      return res.json(API.error({ message: 'error' }))
+    }
+
+    const tracesRes = await tonapi.get(
+      `https://tonapi.io/v2/accounts/${address}/traces?limit=1000`
+    )
+    const { traces } = tracesRes.data
+    const tracesLength = traces.length
+    const maxPage = Math.ceil(tracesLength / limit) - 1
+
+    if (page === 0) {
+      eventsRes = await tonapi.get(`/accounts/${address}/events?limit=${limit}`)
+    } else {
+      eventsRes = await tonapi.get(
+        `/accounts/${address}/events?limit=${limit}&before_lt=${
+          traces[start - 1].utime
+        }`
       )
-
-      const transactions = response.data
-      transactionsFromDb = await TransactionsModel.create({
-        message_id,
-        events: transactions.events,
-        next_from: transactions.next_from,
-        is_end: transactions.events.length < limit,
-      })
-    } else if (start >= length) {
-      const response = await tonapi.get(
-        `/accounts/${address}/events?limit=100&initiator=false&before_lt=${transactionsFromDb.next_from}`
-      )
-
-      const transactions = response.data
-      await TransactionsModel.findOneAndUpdate(
-        { message_id },
-        {
-          $push: { events: { $each: transactions.events } },
-          $set: {
-            next_from: transactions.next_from,
-            is_end: transactions.events.length < limit,
-          },
-        }
-      )
-      const updatedTransactions = await TransactionsModel.findOne({ message_id })
-
-      if (updatedTransactions) {
-        transactionsFromDb = updatedTransactions
-      }
     }
 
     return res.json(
       API.result({
-        owner_address: address,
+        owner_address: Address.getNonBounceable(address),
+        raw_owner_address: Address.getRaw(address),
         limit,
         page,
-        is_last_page:
-          page === Math.ceil(transactionsFromDb.events.length / limit) - 1 &&
-          transactionsFromDb.is_end,
-        events_count: transactionsFromDb.events.length,
-        events: transactionsFromDb.events.slice(start, end),
+        max_page: maxPage,
+        events: eventsRes.data.events,
       })
     )
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
-    if (error) {
-      if (error.includes('rate limit')) {
-        return res.json(
-          API.error({
-            message: 'rate limit',
-          })
-        )
-      }
+    if (error && error.toLowerCase().includes('rate limit')) {
+      return res.json(
+        API.error({
+          message: 'rate limit',
+        })
+      )
     }
 
     return res.json(API.error({ message: 'error' }))
