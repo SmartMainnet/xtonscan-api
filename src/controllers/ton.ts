@@ -31,7 +31,7 @@ export const getRawAddress = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -59,7 +59,7 @@ export const getTonPrice = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -115,7 +115,7 @@ export const getAddressType = async (
     if (error && error.toLowerCase().includes("can't decode address")) {
       return res.json(
         API.error({
-          message: "can't decode address",
+          message: 'address_not_found',
         })
       )
     }
@@ -123,7 +123,7 @@ export const getAddressType = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -142,16 +142,16 @@ export const getWalletInfo = async (
     const response = await tonapi.get(`/accounts/${address}`)
     const addressData = response.data
 
-    const tonPriceRes = await tonapi.get('/rates?tokens=ton&currencies=usd')
-    const tonPrice: number = tonPriceRes?.data?.rates?.TON?.prices?.USD
+    const tonPriceResponse = await tonapi.get('/rates?tokens=ton&currencies=usd')
+    const tonPrice: number = tonPriceResponse?.data?.rates?.TON?.prices?.USD
 
-    const jettonsRes = await tonapi.get(
+    const jettonsResponse = await tonapi.get(
       `/accounts/${address}/jettons?currencies=usd`
     )
-    const jettons = jettonsRes.data.balances
+    const jettons = jettonsResponse.data.balances
 
-    const nftsRes = await tonapi.get(`/accounts/${address}/nfts`)
-    const nfts = nftsRes.data.nft_items
+    const nftsResponse = await tonapi.get(`/accounts/${address}/nfts`)
+    const nfts = nftsResponse.data.nft_items
 
     const walletAddress: string = Address.getNonBounceable(address)
     const balanceTON: number = addressData.balance / 1000000000 || 0
@@ -180,7 +180,7 @@ export const getWalletInfo = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -206,7 +206,7 @@ export const getTransactionInfo = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -248,7 +248,7 @@ export const getJettonInfo = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -292,7 +292,7 @@ export const getNftInfo = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -338,7 +338,7 @@ export const getNftInfoByOwner = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -355,23 +355,23 @@ export const getTransactions = async (
     const { address, limit = 10, page = 0 } = req.body
 
     const start = page * limit
-    let eventsRes
+    let eventsResponse
 
     if (start >= 1000) {
       return res.json(API.error({ message: 'error' }))
     }
 
-    const tracesRes = await tonapi.get(
+    const tracesResponse = await tonapi.get(
       `https://tonapi.io/v2/accounts/${address}/traces?limit=1000`
     )
-    const { traces } = tracesRes.data
+    const { traces } = tracesResponse.data
     const tracesLength = traces.length
     const maxPage = Math.ceil(tracesLength / limit) - 1
 
     if (page === 0) {
-      eventsRes = await tonapi.get(`/accounts/${address}/events?limit=${limit}`)
+      eventsResponse = await tonapi.get(`/accounts/${address}/events?limit=${limit}`)
     } else {
-      eventsRes = await tonapi.get(
+      eventsResponse = await tonapi.get(
         `/accounts/${address}/events?limit=${limit}&before_lt=${
           traces[start - 1].utime
         }`
@@ -385,7 +385,7 @@ export const getTransactions = async (
         limit,
         page,
         max_page: maxPage,
-        events: eventsRes.data.events,
+        events: eventsResponse.data.events,
       })
     )
   } catch (e: any) {
@@ -394,7 +394,7 @@ export const getTransactions = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -420,7 +420,7 @@ export const getJettons = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
@@ -446,7 +446,7 @@ export const getNfts = async (
     if (error && error.toLowerCase().includes('rate limit')) {
       return res.json(
         API.error({
-          message: 'rate limit',
+          message: 'rate_limit',
         })
       )
     }
