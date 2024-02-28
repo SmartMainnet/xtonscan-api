@@ -320,11 +320,12 @@ export const getNftInfoByOwner = async (
 
     return res.json(
       API.result({
+        page,
+        max_page: nftCount,
         nft_address: nftAddress,
         collection_address: collectionAddress,
         owner_address: ownerAddress,
         owner_name: nftInfo.owner.name,
-        last_page: nftCount,
         nft_image: nftInfo.previews[2].url,
         nft_name: nftInfo.metadata.name,
         nft_description: nftInfo.metadata.description,
@@ -413,7 +414,12 @@ export const getJettons = async (
     const response = await tonapi.get(`/accounts/${address}/jettons?currencies=usd`)
     const jettons = response.data.balances
 
-    return res.json(API.result(jettons))
+    return res.json(
+      API.result({
+        owner_address: Address.getNonBounceable(address),
+        jettons,
+      })
+    )
   } catch (e: any) {
     const error: string = e?.response?.data?.error
 
