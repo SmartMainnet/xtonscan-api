@@ -381,11 +381,11 @@ export const getTransactions = async (
 
     return res.json(
       API.result({
-        owner_address: Address.getNonBounceable(address),
-        raw_owner_address: Address.getRaw(address),
         limit,
         page,
         max_page: maxPage,
+        owner_address: Address.getNonBounceable(address),
+        raw_owner_address: Address.getRaw(address),
         events: eventsResponse.data.events,
       })
     )
@@ -409,15 +409,37 @@ export const getJettons = async (
   res: Response
 ): Promise<Response<IAPI>> => {
   try {
-    const { address } = req.body
+    const { address, limit = 10, page = 0 } = req.body
 
     const response = await tonapi.get(`/accounts/${address}/jettons?currencies=usd`)
     const jettons = response.data.balances
+      ?.filter((jetton_data: any) => {
+        const balance = jetton_data.balance / 10 ** jetton_data.jetton.decimals
+        const price = jetton_data.price.prices.USD
+
+        return balance * price > 0.01
+      })
+      ?.sort((a: any, b: any) => {
+        const balanceA = a.balance / 10 ** a.jetton.decimals
+        const balanceB = b.balance / 10 ** b.jetton.decimals
+        const priceA = a.price.prices.USD
+        const priceB = b.price.prices.USD
+
+        return balanceB * priceB - balanceA * priceA
+      })
+
+    const start = page * limit
+    const end = page * limit + limit
+    const maxPage = Math.ceil(jettons.length / limit) - 1
 
     return res.json(
       API.result({
+        limit,
+        page,
+        max_page: maxPage,
         owner_address: Address.getNonBounceable(address),
-        jettons,
+        raw_owner_address: Address.getRaw(address),
+        jettons: jettons.slice(start, end),
       })
     )
   } catch (e: any) {
